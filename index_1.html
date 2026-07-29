@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Student Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e14;
+    --surface: #10161f;
+    --border: #1d2733;
+    --text: #dde6e2;
+    --text-dim: #7c8b93;
+    --accent: #5eead4;
+    --accent-2: #f2b880;
+    --danger: #f2748a;
+    --radius: 10px;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
+    --body: 'Inter', system-ui, sans-serif;
+  }
+
+  html[data-theme="light"] {
+    --bg: #f3f5f1;
+    --surface: #ffffff;
+    --border: #dde3da;
+    --text: #17211c;
+    --text-dim: #5f6b66;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--body);
+    transition: background 0.3s ease, color 0.3s ease;
+  }
+
+  .app {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 28px 20px 40px;
+  }
+
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .prompt {
+    font-family: var(--mono);
+    font-size: clamp(14px, 2.4vw, 19px);
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 2px;
+  }
+
+  .prompt-user { color: var(--accent); }
+  .prompt-sep { color: var(--text-dim); margin-right: 6px; }
+  .greeting-text { color: var(--text); }
+
+  .cursor {
+    color: var(--accent-2);
+    animation: blink 1s step-end infinite;
+  }
+
+  @keyframes blink { 50% { opacity: 0; } }
+
+  .theme-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 6px 12px;
+    border-radius: 999px;
+    cursor: pointer;
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.05em;
+    color: var(--text-dim);
+  }
+
+  .theme-toggle:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .toggle-track {
+    width: 34px;
+    height: 18px;
+    background: var(--border);
+    border-radius: 999px;
+    position: relative;
+    display: inline-block;
+    transition: background 0.25s ease;
+  }
+
+  .toggle-thumb {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--accent);
+    transition: transform 0.25s ease;
+  }
+
+  html[data-theme="light"] .toggle-thumb { transform: translateX(16px); }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 1fr 1.3fr 1.3fr;
+    gap: 18px;
+  }
+
+  @media (max-width: 800px) {
+    .grid { grid-template-columns: 1fr; }
+  }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    min-height: 220px;
+  }
+
+  .panel-title {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--accent);
+    margin: 0 0 16px;
+    letter-spacing: 0.03em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .count-badge {
+    background: var(--border);
+    color: var(--text-dim);
+    font-size: 11px;
+    padding: 1px 8px;
+    border-radius: 999px;
+  }
+
+  /* Clock panel */
+  .clock-time {
+    font-family: var(--mono);
+    font-size: clamp(28px, 5vw, 38px);
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  .clock-date {
+    color: var(--text-dim);
+    font-size: 13px;
+    margin-top: 8px;
+  }
+
+  /* Todo panel */
+  .todo-form {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  .todo-form input {
+    flex: 1;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 6px;
+    padding: 9px 10px;
+    font-family: var(--body);
+    font-size: 14px;
+  }
+
+  .btn-add {
+    background: var(--accent);
+    color: #08171a;
+    border: none;
+    border-radius: 6px;
+    padding: 0 16px;
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .btn-add:hover { opacity: 0.88; }
+
+  .todo-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    overflow-y: auto;
+    max-height: 260px;
+  }
+
+  .todo-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 6px;
+    border: 1px solid transparent;
+  }
+
+  .todo-item:hover { border-color: var(--border); }
+
+  .todo-check {
+    font-family: var(--mono);
+    color: var(--accent);
+    cursor: pointer;
+    user-select: none;
+    width: 18px;
+  }
+
+  .todo-label {
+    flex: 1;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  .todo-item.done .todo-label {
+    color: var(--text-dim);
+    text-decoration: line-through;
+  }
+
+  .todo-delete {
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    cursor: pointer;
+    font-size: 13px;
+  }
+
+  .todo-delete:hover { color: var(--danger); }
+
+  .todo-empty {
+    color: var(--text-dim);
+    font-size: 13px;
+    font-family: var(--mono);
+  }
+
+  /* Notes panel */
+  .notes-area {
+    flex: 1;
+    resize: none;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 6px;
+    padding: 12px;
+    font-family: var(--body);
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 160px;
+  }
+
+  .notes-meta {
+    margin-top: 10px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-dim);
+    text-align: right;
+  }
+
+  .footer {
+    margin-top: 30px;
+    text-align: center;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cursor { animation: none; }
+    * { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="prompt">
+      <span class="prompt-user">student@dashboard</span><span class="prompt-sep">:~$</span>
+      <span class="greeting-text" id="greetingText"></span><span class="cursor">▍</span>
+    </div>
+    <button class="theme-toggle" id="themeToggle" aria-pressed="false">
+      <span class="toggle-track"><span class="toggle-thumb"></span></span>
+      <span id="themeLabel">DARK</span>
+    </button>
+  </header>
+
+  <main class="grid">
+    <section class="panel">
+      <h2 class="panel-title">// clock</h2>
+      <div class="clock-time" id="clockTime">00:00:00</div>
+      <div class="clock-date" id="clockDate">loading date...</div>
+    </section>
+
+    <section class="panel">
+      <h2 class="panel-title">// tasks <span class="count-badge" id="todoCount">0 open</span></h2>
+      <form class="todo-form" id="todoForm">
+        <input type="text" id="todoInput" placeholder="add a task, press enter" autocomplete="off" />
+        <button type="submit" class="btn-add">add</button>
+      </form>
+      <ul class="todo-list" id="todoList"></ul>
+    </section>
+
+    <section class="panel">
+      <h2 class="panel-title">// notes</h2>
+      <textarea class="notes-area" id="notesArea" placeholder="jot down anything here..."></textarea>
+      <div class="notes-meta" id="notesStatus">ready</div>
+    </section>
+  </main>
+
+  <footer class="footer">student dashboard // built for focused study sessions</footer>
+</div>
+
+<script>
+  // ---------- Greeting ----------
+  function getGreeting() {
+    const hour = new Date().getHours();
+    if (hour < 5) return "still up? get some rest soon.";
+    if (hour < 12) return "good morning. ready to run today's session?";
+    if (hour < 18) return "good afternoon. let's keep the streak going.";
+    return "good evening. wrap up strong.";
+  }
+
+  function typeGreeting(text) {
+    const el = document.getElementById('greetingText');
+    el.textContent = '';
+    let i = 0;
+    function step() {
+      if (i <= text.length) {
+        el.textContent = text.slice(0, i);
+        i++;
+        setTimeout(step, 22);
+      }
+    }
+    step();
+  }
+  typeGreeting(getGreeting());
+
+  // ---------- Theme toggle ----------
+  const themeToggle = document.getElementById('themeToggle');
+  const themeLabel = document.getElementById('themeLabel');
+  let isLight = false;
+
+  themeToggle.addEventListener('click', () => {
+    isLight = !isLight;
+    document.documentElement.setAttribute('data-theme', isLight ? 'light' : 'dark');
+    themeLabel.textContent = isLight ? 'LIGHT' : 'DARK';
+    themeToggle.setAttribute('aria-pressed', String(isLight));
+  });
+
+  // ---------- Clock ----------
+  function pad(n) { return String(n).padStart(2, '0'); }
+
+  function updateClock() {
+    const now = new Date();
+    const time = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+    document.getElementById('clockTime').textContent = time;
+    document.getElementById('clockDate').textContent = now.toLocaleDateString(undefined, {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    });
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  // ---------- Todo list ----------
+  let todos = [
+    { id: 1, text: 'Finish TryHackMe DFIR lab', done: false },
+    { id: 2, text: 'Review notes before the group meeting', done: false }
+  ];
+  let nextId = 3;
+
+  const todoForm = document.getElementById('todoForm');
+  const todoInput = document.getElementById('todoInput');
+  const todoList = document.getElementById('todoList');
+  const todoCount = document.getElementById('todoCount');
+
+  function renderTodos() {
+    todoList.innerHTML = '';
+    if (todos.length === 0) {
+      const empty = document.createElement('li');
+      empty.className = 'todo-empty';
+      empty.textContent = 'no tasks yet — add one above';
+      todoList.appendChild(empty);
+    }
+    todos.forEach(todo => {
+      const li = document.createElement('li');
+      li.className = 'todo-item' + (todo.done ? ' done' : '');
+
+      const check = document.createElement('span');
+      check.className = 'todo-check';
+      check.textContent = todo.done ? '[x]' : '[ ]';
+      check.addEventListener('click', () => {
+        todo.done = !todo.done;
+        renderTodos();
+      });
+
+      const label = document.createElement('span');
+      label.className = 'todo-label';
+      label.textContent = todo.text;
+      label.addEventListener('click', () => {
+        todo.done = !todo.done;
+        renderTodos();
+      });
+
+      const del = document.createElement('button');
+      del.className = 'todo-delete';
+      del.textContent = 'remove';
+      del.addEventListener('click', () => {
+        todos = todos.filter(t => t.id !== todo.id);
+        renderTodos();
+      });
+
+      li.appendChild(check);
+      li.appendChild(label);
+      li.appendChild(del);
+      todoList.appendChild(li);
+    });
+
+    const open = todos.filter(t => !t.done).length;
+    todoCount.textContent = `${open} open`;
+  }
+
+  todoForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const value = todoInput.value.trim();
+    if (!value) return;
+    todos.push({ id: nextId++, text: value, done: false });
+    todoInput.value = '';
+    renderTodos();
+  });
+
+  renderTodos();
+
+  // ---------- Notes ----------
+  const notesArea = document.getElementById('notesArea');
+  const notesStatus = document.getElementById('notesStatus');
+  let notesTimer;
+
+  notesArea.addEventListener('input', () => {
+    notesStatus.textContent = 'typing...';
+    clearTimeout(notesTimer);
+    notesTimer = setTimeout(() => {
+      notesStatus.textContent = 'saved in this session';
+    }, 600);
+  });
+</script>
+</body>
+</html>
